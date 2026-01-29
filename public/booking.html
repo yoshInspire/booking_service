@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Запись на консультацию</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Библиотека для календаря с выбором суббот -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/ru.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-calendar-alt"></i> Запись на консультацию к учителю</h1>
+            <nav>
+                <a href="index.html"><i class="fas fa-home"></i> На главную</a>
+                <a href="admin.html"><i class="fas fa-user-shield"></i> Вход для админа</a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="booking-form">
+                <h2>Форма записи</h2>
+                <p>Заполните форму ниже, чтобы записаться на консультацию к учителю. <strong>Консультации проводятся только по субботам с 11:30 до 13:00.</strong></p>
+                
+                <form id="bookingForm">
+                    <div class="form-group">
+                        <label for="teacher"><i class="fas fa-user-tie"></i> Выберите учителя:</label>
+                        <select id="teacher" name="teacher" required>
+                            <option value="">-- Выберите учителя --</option>
+                            <!-- Учителя будут загружены через JavaScript -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="date"><i class="fas fa-calendar-day"></i> Выберите субботу:</label>
+                        <div class="date-picker-container">
+                            <input type="text" id="date" name="date" class="date-input" required placeholder="Выберите субботу" readonly>
+                            <div class="calendar-info">
+                                <p><i class="fas fa-info-circle"></i> В календаре доступны только субботы</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-clock"></i> Выберите время консультации (20 минут):</label>
+                        <div class="time-slots">
+                            <div class="time-info">
+                                <p><i class="fas fa-info-circle"></i> Консультации родителей проводятся с 11:30 до 13:00</p>
+                            </div>
+                            <!-- Слоты времени будут созданы динамически через JavaScript -->
+                        </div>
+                        <input type="hidden" id="selectedTime" name="selectedTime" required>
+                        <p class="time-hint">Каждая консультация длится 20 минут. <span id="occupiedSlotsInfo"></span></p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="parentName"><i class="fas fa-user"></i> ФИО родителя:</label>
+                        <input type="text" id="parentName" name="parentName" required placeholder="Введите ваше ФИО">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="studentName"><i class="fas fa-graduation-cap"></i> ФИО ученика:</label>
+                        <input type="text" id="studentName" name="studentName" required placeholder="Введите ФИО ученика">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="studentClass"><i class="fas fa-school"></i> Класс ученика:</label>
+                        <select id="studentClass" name="studentClass" required>
+                            <option value="">-- Выберите класс --</option>
+                            <!-- Классы будут добавлены через JavaScript -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone"><i class="fas fa-phone"></i> Контактный телефон:</label>
+                        <input type="tel" id="phone" name="phone" required placeholder="+7 (XXX) XXX-XX-XX">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email"><i class="fas fa-envelope"></i> Email:</label>
+                        <input type="email" id="email" name="email" required placeholder="example@mail.ru">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="comment"><i class="fas fa-comment"></i> Комментарий (необязательно):</label>
+                        <textarea id="comment" name="comment" rows="3" placeholder="Укажите тему для обсуждения или дополнительные пожелания"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Отправить запись
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="resetBtn">
+                            <i class="fas fa-redo"></i> Очистить форму
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="booking-info">
+                <h3><i class="fas fa-exclamation-circle"></i> Важная информация</h3>
+                <ul>
+                    <li>Запись подтверждается администратором школы</li>
+                    <li>Вы получите подтверждение по email или телефону</li>
+                    <li><strong>Консультации родителей проводятся только по субботам</strong></li>
+                    <li><strong>Время консультации: с 11:30 до 13:00</strong></li>
+                    <li><strong>Продолжительность консультации: 20 минут на одного родителя</strong></li>
+                    <li>В календаре доступны только субботы</li>
+                    <li>Занятые временные слоты у выбранного учителя не отображаются</li>
+                    <li>Пожалуйста, приходите за 5 минут до назначенного времени</li>
+                    <li>Если вы не можете прийти, отмените запись по телефону +7 (495) 123-45-67</li>
+                </ul>
+            </div>
+        </main>
+
+        <footer>
+            <p>Школа №133 г. Екатеринбург | Контактный телефон: +7 (343) 30-30-133</p>
+            <p>© 2026 Система записи на консультацию. Все права защищены.</p>
+        </footer>
+    </div>
+
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-check-circle"></i> Запись успешно отправлена!</h3>
+            </div>
+            <div class="modal-body">
+                <p>Ваша запись на консультацию была успешно отправлена администратору. Ожидайте подтверждения по email или телефону.</p>
+                <div id="bookingDetails"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="closeModal" class="btn btn-primary">ОК</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
