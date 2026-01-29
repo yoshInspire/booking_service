@@ -252,28 +252,22 @@ function loadClassOptions() {
     console.log('Список классов загружен:', classes.length);
 }
 
-// Функция для инициализации календаря с выбором только суббот
+// Единственная доступная дата для консультации: 31.01.2026
+const CONSULTATION_DATE = '2026-01-31';
+
+// Функция для инициализации календаря с выбором только 31.01.2026
 function initSaturdayCalendar() {
     const dateInput = document.getElementById('date');
     if (!dateInput) return;
     
-    console.log('Инициализация календаря с выбором только суббот...');
+    console.log('Инициализация календаря: доступна только дата 31.01.2026');
     
-    // Получаем ближайшую субботу
-    const nextSaturday = getNextSaturday();
-    
-    // Настраиваем Flatpickr для выбора только суббот
+    // Настраиваем Flatpickr: активна только дата 31.01.2026
     const calendar = flatpickr(dateInput, {
         locale: "ru",
         dateFormat: "Y-m-d",
-        minDate: nextSaturday,
-        maxDate: new Date().fp_incr(90), // 90 дней вперед
-        disable: [
-            function(date) {
-                // Разрешаем только субботы
-                return date.getDay() !== 6;
-            }
-        ],
+        enable: [CONSULTATION_DATE],
+        defaultDate: CONSULTATION_DATE,
         onChange: function(selectedDates, dateStr, instance) {
             console.log('Выбрана дата:', dateStr);
             if (dateStr) {
@@ -281,24 +275,8 @@ function initSaturdayCalendar() {
             }
         },
         onReady: function(selectedDates, dateStr, instance) {
-            // Устанавливаем ближайшую субботу по умолчанию
-            instance.setDate(nextSaturday, false);
-            console.log('Дата по умолчанию установлена:', nextSaturday);
-            
-            // Добавляем класс для суббот в календаре
-            setTimeout(() => {
-                const calendarContainer = instance.calendarContainer;
-                if (calendarContainer) {
-                    // Помечаем все субботы
-                    const saturdays = calendarContainer.querySelectorAll('.flatpickr-day:not(.disabled)');
-                    saturdays.forEach(day => {
-                        const date = new Date(day.dateObj);
-                        if (date.getDay() === 6) {
-                            day.classList.add('saturday');
-                        }
-                    });
-                }
-            }, 100);
+            instance.setDate(CONSULTATION_DATE, false);
+            console.log('Дата по умолчанию установлена: 31.01.2026');
         }
     });
     
