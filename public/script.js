@@ -252,26 +252,28 @@ function loadClassOptions() {
     console.log('Список классов загружен:', classes.length);
 }
 
-// Функция для инициализации календаря с выбором только суббот
+// Функция для инициализации календаря с выбором только 31 января
 function initSaturdayCalendar() {
     const dateInput = document.getElementById('date');
     if (!dateInput) return;
     
-    console.log('Инициализация календаря с выбором только суббот...');
+    console.log('Инициализация календаря с выбором только 31 января...');
     
-    // Получаем ближайшую субботу
-    const nextSaturday = getNextSaturday();
+    // Устанавливаем дату 31 января 2026 года
+    const targetDate = new Date('2026-01-31');
+    targetDate.setHours(0, 0, 0, 0);
     
-    // Настраиваем Flatpickr для выбора только суббот
+    // Настраиваем Flatpickr для выбора только 31 января
     const calendar = flatpickr(dateInput, {
         locale: "ru",
         dateFormat: "Y-m-d",
-        minDate: nextSaturday,
-        maxDate: new Date().fp_incr(90), // 90 дней вперед
+        minDate: targetDate,
+        maxDate: targetDate,
         disable: [
             function(date) {
-                // Разрешаем только субботы
-                return date.getDay() !== 6;
+                // Разрешаем только 31 января 2026 года
+                const dateStr = date.toISOString().split('T')[0];
+                return dateStr !== '2026-01-31';
             }
         ],
         onChange: function(selectedDates, dateStr, instance) {
@@ -281,44 +283,28 @@ function initSaturdayCalendar() {
             }
         },
         onReady: function(selectedDates, dateStr, instance) {
-            // Устанавливаем ближайшую субботу по умолчанию
-            instance.setDate(nextSaturday, false);
-            console.log('Дата по умолчанию установлена:', nextSaturday);
-            
-            // Добавляем класс для суббот в календаре
-            setTimeout(() => {
-                const calendarContainer = instance.calendarContainer;
-                if (calendarContainer) {
-                    // Помечаем все субботы
-                    const saturdays = calendarContainer.querySelectorAll('.flatpickr-day:not(.disabled)');
-                    saturdays.forEach(day => {
-                        const date = new Date(day.dateObj);
-                        if (date.getDay() === 6) {
-                            day.classList.add('saturday');
-                        }
-                    });
-                }
-            }, 100);
+            // Устанавливаем 31 января по умолчанию
+            instance.setDate(targetDate, false);
+            console.log('Дата по умолчанию установлена: 31 января 2026');
         }
     });
     
     // Сохраняем ссылку на календарь
     window.bookingCalendar = calendar;
     
-    console.log('Календарь инициализирован');
+    console.log('Календарь инициализирован (только 31 января 2026)');
 }
 
-// Функция для получения ближайшей субботы
+// Функция для получения даты 31 января 2026
+function getTargetDate() {
+    const targetDate = new Date('2026-01-31');
+    targetDate.setHours(0, 0, 0, 0);
+    return targetDate;
+}
+
+// Функция для получения ближайшей субботы (оставлена для совместимости)
 function getNextSaturday() {
-    const today = new Date();
-    const dayOfWeek = today.getDay(); // 0 - воскресенье, 6 - суббота
-    const daysUntilSaturday = dayOfWeek === 6 ? 0 : (6 - dayOfWeek + 7) % 7;
-    
-    const nextSaturday = new Date(today);
-    nextSaturday.setDate(today.getDate() + daysUntilSaturday);
-    nextSaturday.setHours(0, 0, 0, 0);
-    
-    return nextSaturday;
+    return getTargetDate();
 }
 
 // Функция обновления слотов времени с учетом занятых времен
@@ -575,20 +561,19 @@ function validateBookingForm() {
     // Проверяем, выбрана ли дата
     const dateInput = document.getElementById('date');
     if (!dateInput || !dateInput.value) {
-        showNotification('Пожалуйста, выберите субботу.', 'error');
+        showNotification('Пожалуйста, выберите дату.', 'error');
         dateInput.focus();
         return false;
     }
     
-    // Проверяем, что выбранная дата - суббота
+    // Проверяем, что выбранная дата - 31 января 2026
     const selectedDate = new Date(dateInput.value);
-    if (selectedDate.getDay() !== 6) {
-        showNotification('Запись возможна только по субботам!', 'error');
+    const targetDate = getTargetDate();
+    if (dateInput.value !== '2026-01-31') {
+        showNotification('Запись возможна только на 31 января 2026!', 'error');
         
-        // Находим ближайшую субботу
-        const nextSaturday = getNextSaturday();
         if (window.bookingCalendar) {
-            window.bookingCalendar.setDate(nextSaturday, false);
+            window.bookingCalendar.setDate(targetDate, false);
         }
         return false;
     }
