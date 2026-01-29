@@ -1,10 +1,36 @@
-// /api/bookings.js
 const fs = require('fs');
 const path = require('path');
 
 const DATA_PATH = path.join(__dirname, '..', 'data', 'bookings.json');
+const REDIS_KEY = 'bookings';
 
-function readBookings() {
+function useRedis() {
+    return !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+}
+
+let _redis = null;
+function getRedis() {
+    if (_redis) return _redis;
+    const { Redis } = require('@upstash/redis');
+    _redis = new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN
+    });
+    return _redis;
+}
+
+async function readBookings() {
+    if (useRedis()) {
+        try {
+            const raw = await getRedis().get(REDIS_KEY);
+            if (raw == null || raw === '') return [];
+            const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
+            return Array.isArray(data) ? data : [];
+        } catch (e) {
+            console.warn('Redis readBookings:', e.message);
+            return [];
+        }
+    }
     try {
         const raw = fs.readFileSync(DATA_PATH, 'utf8').trim();
         if (!raw) return [];
@@ -16,9 +42,18 @@ function readBookings() {
     }
 }
 
-function writeBookings(bookings) {
-    fs.mkdirSync(path.dirname(DATA_PATH), { recursive: true });
-    fs.writeFileSync(DATA_PATH, JSON.stringify(bookings, null, 2), 'utf8');
+async function writeBookings(bookings) {
+    if (useRedis()) {
+        await getRedis().set(REDIS_KEY, JSON.stringify(bookings));
+        return;
+    }
+    try {
+        fs.mkdirSync(path.dirname(DATA_PATH), { recursive: true });
+        fs.writeFileSync(DATA_PATH, JSON.stringify(bookings, null, 2), 'utf8');
+    } catch (e) {
+        console.warn('writeBookings (file):', e.message);
+        throw e;
+    }
 }
 
 function parseBody(req) {
@@ -50,7 +85,7 @@ module.exports = async function handler(req, res) {
                 return res.status(400).json({ error: 'Неполные данные' });
             }
 
-            const bookings = readBookings();
+            const bookings = await readBookings();
             const id = Date.now();
             const newBooking = {
                 id,
@@ -67,7 +102,7 @@ module.exports = async function handler(req, res) {
                 createdAt: body.createdAt || new Date().toISOString()
             };
             bookings.push(newBooking);
-            writeBookings(bookings);
+            await writeBookings(bookings);
 
             return res.status(201).json({
                 success: true,
@@ -77,7 +112,7 @@ module.exports = async function handler(req, res) {
         }
 
         if (req.method === 'GET' && req.query && req.query.teacher && req.query.date) {
-            const bookings = readBookings();
+            const bookings = await readBookings();
             const t = String(req.query.teacher).trim();
             const d = String(req.query.date).trim();
             const occupiedSlots = bookings
@@ -92,7 +127,7 @@ module.exports = async function handler(req, res) {
             if (!authHeader || !authHeader.startsWith('Bearer ')) {
                 return res.status(401).json({ error: 'Требуется авторизация' });
             }
-            const bookings = readBookings();
+            const bookings = await readBookings();
             return res.status(200).json(bookings);
         }
 
@@ -108,11 +143,11 @@ module.exports = async function handler(req, res) {
             if (!status) return res.status(400).json({ error: 'Не указан статус' });
             const valid = ['новая', 'подтверждена', 'отменена', 'завершена'];
             if (!valid.includes(status)) return res.status(400).json({ error: 'Недопустимый статус' });
-            const bookings = readBookings();
+            const bookings = await readBookings();
             const idx = bookings.findIndex(b => String(b.id) === id);
             if (idx === -1) return res.status(404).json({ error: 'Запись не найдена' });
             bookings[idx].status = status;
-            writeBookings(bookings);
+            await writeBookings(bookings);
             return res.status(200).json({ success: true });
         }
 
@@ -121,10 +156,10 @@ module.exports = async function handler(req, res) {
             if (!authHeader || !authHeader.startsWith('Bearer ')) {
                 return res.status(401).json({ error: 'Требуется авторизация' });
             }
-            const bookings = readBookings();
+            const bookings = await readBookings();
             const filtered = bookings.filter(b => String(b.id) !== id);
             if (filtered.length === bookings.length) return res.status(404).json({ error: 'Запись не найдена' });
-            writeBookings(filtered);
+            await writeBookings(filtered);
             return res.status(200).json({ success: true });
         }
 
