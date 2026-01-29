@@ -1,0 +1,22 @@
+{
+  "functions": {
+    "api/*.js": {
+      "maxDuration": 10
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
+    }
+  ],
+  "env": {
+    "JWT_SECRET": "ваш_очень_сложный_секретный_ключ_минимум_32_символа",
+    "ADMIN_USERNAME": "admin",
+    "ADMIN_PASSWORD_HASH": "$2a$10$ваш_хэш_пароля_от_bcrypt"
+  }
+}
